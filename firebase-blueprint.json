@@ -1,0 +1,185 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered player or admin in Storm FF Club",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "ign": { "type": "string", "maxLength": 64 },
+        "freeFireUid": { "type": "string", "maxLength": 32 },
+        "email": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "depositBalance": { "type": "number" },
+        "winningBalance": { "type": "number" },
+        "points": { "type": "number" },
+        "signupBonusLocked": { "type": "number" },
+        "hasDeposited": { "type": "boolean" },
+        "referralCode": { "type": "string", "maxLength": 32 },
+        "referredBy": { "type": "string", "maxLength": 32 },
+        "referralCount": { "type": "number" },
+        "referralEarnings": { "type": "number" },
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "isMatchBanned": { "type": "boolean" },
+        "isPermanentlyBanned": { "type": "boolean" },
+        "lastSpinTimestamp": { "type": "string", "maxLength": 64 },
+        "spinCycleDays": { "type": "number" },
+        "spinCyclePointsWon": { "type": "number" },
+        "spinCycleStartDate": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["uid", "ign", "freeFireUid", "email", "role"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Tournament match room details and players",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "enum": ["BR", "CS", "CSHeadshot", "LoneWolf", "LossToWin", "HeadshotLoneWolf"] },
+        "subCategory": { "type": "string", "enum": ["Solo", "Duo", "Squad"] },
+        "map": { "type": "string", "maxLength": 64 },
+        "entryFee": { "type": "number" },
+        "entryType": { "type": "string", "enum": ["Paid", "Free"] },
+        "totalSlots": { "type": "number" },
+        "winPrize": { "type": "number" },
+        "perKillPrize": { "type": "number" },
+        "matchTime": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["upcoming", "open", "live", "completed", "cancelled"] }
+      },
+      "required": ["id", "title", "category", "subCategory", "entryFee", "totalSlots", "winPrize", "status"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Wallet deposits, withdrawals, match fees, and winnings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "uid": { "type": "string", "maxLength": 128 },
+        "userIgn": { "type": "string", "maxLength": 64 },
+        "type": { "type": "string", "enum": ["deposit", "withdraw", "match_join", "match_refund", "match_win", "referral_bonus", "signup_bonus", "spin_reward", "point_redeem"] },
+        "amount": { "type": "number" },
+        "method": { "type": "string", "maxLength": 32 },
+        "trxId": { "type": "string", "maxLength": 64 },
+        "senderNumber": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "rejectionReason": { "type": "string", "maxLength": 256 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "uid", "userIgn", "type", "amount", "status", "createdAt"]
+    },
+    "MysteryBoxOrder": {
+      "title": "MysteryBoxOrder",
+      "description": "Point redemption order for Mystery Box rewards",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "uid": { "type": "string", "maxLength": 128 },
+        "userIgn": { "type": "string", "maxLength": 64 },
+        "freeFireUid": { "type": "string", "maxLength": 32 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "pointsSpent": { "type": "number" },
+        "itemTitle": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pending", "fulfilled"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "uid", "userIgn", "freeFireUid", "pointsSpent", "status", "createdAt"]
+    },
+    "BroadcastNotification": {
+      "title": "BroadcastNotification",
+      "description": "Live in-app notifications for deposit approval, mystery box fulfillment, and admin broadcasts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 128 },
+        "message": { "type": "string", "maxLength": 512 },
+        "category": { "type": "string", "enum": ["system", "match", "wallet", "reward"] },
+        "targetUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "read": { "type": "boolean" }
+      },
+      "required": ["id", "title", "message", "category", "createdAt"]
+    },
+    "Banner": {
+      "title": "Banner",
+      "description": "Home carousel promotional banner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 128 },
+        "imageUrl": { "type": "string", "maxLength": 512 },
+        "redirectUrl": { "type": "string", "maxLength": 512 },
+        "actionType": { "type": "string", "enum": ["video", "link", "in_app"] },
+        "active": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "title", "imageUrl", "actionType", "active"]
+    },
+    "MatchResult": {
+      "title": "MatchResult",
+      "description": "Completed tournament match results and leaderboard placements",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "matchTitle": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 32 },
+        "map": { "type": "string", "maxLength": 64 },
+        "completedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "matchTitle", "completedAt"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Dynamic admin configurations, gateways, referral thresholds, and app download links",
+      "type": "object",
+      "properties": {
+        "bKashNumber": { "type": "string", "maxLength": 32 },
+        "nagadNumber": { "type": "string", "maxLength": 32 },
+        "whatsAppNumber": { "type": "string", "maxLength": 32 },
+        "minDeposit": { "type": "number" },
+        "minWithdraw": { "type": "number" },
+        "signupBonus": { "type": "number" },
+        "referralMinDeposit": { "type": "number" },
+        "androidDownloadUrl": { "type": "string", "maxLength": 512 },
+        "iosDownloadUrl": { "type": "string", "maxLength": 512 },
+        "developerProfile": { "type": "object", "description": "Editable developer contact details for Hire Developer modal" }
+      },
+      "required": ["bKashNumber", "nagadNumber", "minDeposit", "minWithdraw"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and wallet state"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Tournaments and slot rosters"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Player financial ledger records"
+    },
+    "/mystery_box_orders/{orderId}": {
+      "schema": "MysteryBoxOrder",
+      "description": "Points redeemed for Mystery Boxes"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "BroadcastNotification",
+      "description": "Targeted and broadcast notifications"
+    },
+    "/banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Promotional home banners"
+    },
+    "/results/{resultId}": {
+      "schema": "MatchResult",
+      "description": "Recent completed match standings"
+    },
+    "/settings/global": {
+      "schema": "SystemSettings",
+      "description": "Dynamic applet configuration"
+    }
+  }
+}

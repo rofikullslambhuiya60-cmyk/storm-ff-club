@@ -1,0 +1,6 @@
+{
+  "name": "Storm FF Club - Free Fire Tournament App & Admin Panel",
+  "description": "Cross-platform Free Fire tournament mobile app and automated admin panel with live slot booking, bKash/Nagad wallet verification, dynamic prizes, daily spin, and real-time room credentials.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,226 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net - default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (
+          request.auth.token.email_verified == true &&
+          (
+            request.auth.token.email == 'rofikullslambhuiya60@gmail.com' ||
+            request.auth.token.email == 'admin@stormff.com' ||
+            request.auth.token.email == 'admin@ffarena.com'
+          )
+        )
+      );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'ign', 'freeFireUid', 'role', 'depositBalance', 'winningBalance', 'points']) &&
+        data.uid is string && data.uid.size() <= 128 &&
+        data.ign is string && data.ign.size() >= 1 && data.ign.size() <= 64 &&
+        data.freeFireUid is string && data.freeFireUid.size() >= 6 && data.freeFireUid.size() <= 32 &&
+        data.role in ['user', 'admin'] &&
+        data.depositBalance is number && data.depositBalance >= 0 &&
+        data.winningBalance is number && data.winningBalance >= 0 &&
+        data.points is number && data.points >= 0;
+    }
+
+    function isValidMatch(data) {
+      return data.keys().hasAll(['id', 'title', 'category', 'subCategory', 'entryFee', 'totalSlots', 'winPrize', 'status']) &&
+        data.id is string && data.id.size() <= 64 &&
+        data.title is string && data.title.size() <= 128 &&
+        data.category in ['BR', 'CS', 'CSHeadshot', 'LoneWolf', 'LossToWin', 'HeadshotLoneWolf'] &&
+        data.subCategory in ['Solo', 'Duo', 'Squad'] &&
+        data.entryFee is number && data.entryFee >= 0 &&
+        data.totalSlots is number && data.totalSlots > 0 && data.totalSlots <= 100 &&
+        data.winPrize is number && data.winPrize >= 0 &&
+        data.status in ['upcoming', 'open', 'live', 'completed', 'cancelled'];
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['id', 'uid', 'userIgn', 'type', 'amount', 'status', 'createdAt']) &&
+        data.id is string && data.id.size() <= 64 &&
+        data.uid is string && data.uid.size() <= 128 &&
+        data.userIgn is string && data.userIgn.size() <= 64 &&
+        data.type in ['deposit', 'withdraw', 'match_join', 'match_refund', 'match_win', 'referral_bonus', 'signup_bonus', 'spin_reward', 'point_redeem'] &&
+        data.amount is number && data.amount >= 0 &&
+        data.status in ['pending', 'approved', 'rejected'] &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidMysteryBoxOrder(data) {
+      return data.keys().hasAll(['id', 'uid', 'userIgn', 'freeFireUid', 'pointsSpent', 'status', 'createdAt']) &&
+        data.id is string && data.id.size() <= 64 &&
+        data.uid is string && data.uid.size() <= 128 &&
+        data.userIgn is string && data.userIgn.size() <= 64 &&
+        data.freeFireUid is string && data.freeFireUid.size() <= 32 &&
+        data.pointsSpent is number && data.pointsSpent > 0 &&
+        data.status in ['pending', 'fulfilled'] &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['id', 'title', 'message', 'category', 'createdAt']) &&
+        data.id is string && data.id.size() <= 64 &&
+        data.title is string && data.title.size() <= 128 &&
+        data.message is string && data.message.size() <= 512 &&
+        data.category in ['system', 'match', 'wallet', 'reward'] &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Users collection: strict protection against wallet, winnings, role, or point tampering
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isSignedIn() && isValidUser(incoming()) && (
+        isAdmin() || (
+          isOwner(userId) &&
+          incoming().uid == request.auth.uid &&
+          incoming().role == 'user' &&
+          incoming().depositBalance == 0 &&
+          incoming().winningBalance == 0 &&
+          incoming().points >= 0 && incoming().points <= 5 &&
+          incoming().hasDeposited == false &&
+          incoming().referralEarnings == 0 &&
+          incoming().isMatchBanned == false &&
+          incoming().isPermanentlyBanned == false
+        )
+      );
+      allow update: if isValidId(userId) && isSignedIn() && isValidUser(incoming()) && (
+        isAdmin() || (
+          isOwner(userId) &&
+          incoming().uid == existing().uid &&
+          incoming().role == existing().role &&
+          incoming().depositBalance == existing().depositBalance &&
+          incoming().winningBalance == existing().winningBalance &&
+          incoming().signupBonusLocked == existing().signupBonusLocked &&
+          incoming().hasDeposited == existing().hasDeposited &&
+          incoming().referralEarnings == existing().referralEarnings &&
+          incoming().points == existing().points &&
+          incoming().isMatchBanned == existing().isMatchBanned &&
+          incoming().isPermanentlyBanned == existing().isPermanentlyBanned &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'ign', 'freeFireUid', 'savedPayoutMethod', 'savedPayoutNumber',
+            'lastSpinTimestamp', 'spinCycleDays', 'spinCyclePointsWon',
+            'spinCycleStartDate', 'freeEventsJoined'
+          ])
+        )
+      );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Matches collection: public read; admins control creation/status/prizes
+    match /matches/{matchId} {
+      allow get: if isValidId(matchId);
+      allow list: if true;
+      allow create: if isValidId(matchId) && isAdmin() && isValidMatch(incoming());
+      allow update: if isValidId(matchId) && isSignedIn() && isValidMatch(incoming()) && (
+        isAdmin() || (
+          existing().status in ['open', 'upcoming'] &&
+          incoming().status == existing().status &&
+          incoming().entryFee == existing().entryFee &&
+          incoming().winPrize == existing().winPrize &&
+          incoming().perKillPrize == existing().perKillPrize &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['joinedPlayers'])
+        )
+      );
+      allow delete: if isValidId(matchId) && isAdmin();
+    }
+
+    // Transactions collection: users can only submit pending deposit/withdraw requests; ONLY admins can approve/reject
+    match /transactions/{transactionId} {
+      allow get: if isValidId(transactionId) && isSignedIn() && (existing().uid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isValidId(transactionId) && isSignedIn() && isValidTransaction(incoming()) && (
+        isAdmin() || (
+          incoming().uid == request.auth.uid &&
+          incoming().status == 'pending' &&
+          incoming().type in ['deposit', 'withdraw']
+        )
+      );
+      allow update, delete: if isValidId(transactionId) && isAdmin();
+    }
+
+    // Mystery Box Orders: users can create pending orders; ONLY admins can mark fulfilled
+    match /mystery_box_orders/{orderId} {
+      allow get: if isValidId(orderId) && isSignedIn() && (existing().uid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isValidId(orderId) && isSignedIn() && isValidMysteryBoxOrder(incoming()) && (
+        isAdmin() || (
+          incoming().uid == request.auth.uid &&
+          incoming().status == 'pending'
+        )
+      );
+      allow update, delete: if isValidId(orderId) && isAdmin();
+    }
+
+    // Notifications: users read broadcasts or their own targeted notifications; ONLY admins write
+    match /notifications/{notificationId} {
+      allow get: if isValidId(notificationId) && (
+        !('targetUid' in existing()) || existing().targetUid == null || (isSignedIn() && (existing().targetUid == request.auth.uid || isAdmin()))
+      );
+      allow list: if !('targetUid' in resource.data) || resource.data.targetUid == null || (isSignedIn() && (resource.data.targetUid == request.auth.uid || isAdmin()));
+      allow create, update, delete: if isValidId(notificationId) && isAdmin() && isValidNotification(incoming());
+    }
+
+    // Settings collection: public read; admin-only write
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(settingId) && isAdmin();
+    }
+
+    // Banners collection: public read; admin-only write
+    match /banners/{bannerId} {
+      allow get: if isValidId(bannerId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(bannerId) && isAdmin();
+    }
+
+    // Results collection: public read; admin-only write
+    match /results/{resultId} {
+      allow get: if isValidId(resultId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(resultId) && isAdmin();
+    }
+
+    // Admins collection
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list, create, update, delete: if isAdmin();
+    }
+
+    // Connection test doc
+    match /test/{docId} {
+      allow get: if isValidId(docId);
+      allow write: if false;
+    }
+  }
+}

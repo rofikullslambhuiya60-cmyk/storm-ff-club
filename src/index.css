@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #0b0e14;
+    color: #e2e8f0;
+    font-family: 'Rajdhani', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Segoe UI Symbol", "Apple Symbols", "Noto Color Emoji", "Arial Unicode MS", sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.font-display {
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+}
+
+.font-body {
+  font-family: 'Rajdhani', 'Inter', sans-serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.8);
+}
+
+/* Glow effects */
+.glow-orange {
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.35);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+}
+
+/* Pulse animation for live indicators */
+@keyframes flamePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8));
+  }
+}
+
+.animate-flame {
+  animation: flamePulse 2s infinite ease-in-out;
+}
+

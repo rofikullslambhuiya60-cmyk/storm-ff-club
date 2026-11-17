@@ -1,0 +1,39 @@
+{
+  "id": "/?source=pwa",
+  "name": "Storm FF Club",
+  "short_name": "Storm FF",
+  "description": "Cross-platform Free Fire tournament app and admin panel with live slot booking, bKash & Nagad wallet payouts, daily spin wheel, and Storm Points rewards.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#f97316",
+  "categories": ["games", "entertainment", "sports"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/aistudio/Storm_FF_Club__Play_and_Win_69a00649.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
