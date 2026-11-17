@@ -165,7 +165,7 @@ export const ReferralLandingPage: React.FC<ReferralLandingPageProps> = ({
                   <Smartphone className="w-5 h-5 text-slate-950" />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-black leading-tight">Download Android App (APK)</div>
+                  <div className="text-sm font-black leading-tight">Android APK Download</div>
                   <div className="text-[10px] font-bold opacity-80">
                     {activeRefCode ? `Auto-copies code ${activeRefCode} • Direct APK` : 'Official v2.5 Verified Build'}
                   </div>
@@ -174,7 +174,7 @@ export const ReferralLandingPage: React.FC<ReferralLandingPageProps> = ({
               <Download className="w-5 h-5 shrink-0" />
             </a>
 
-            {/* Button 2: Download iOS App */}
+            {/* Button 2: iOS App Download */}
             <a
               href={iosUrl}
               target="_blank"
@@ -187,7 +187,7 @@ export const ReferralLandingPage: React.FC<ReferralLandingPageProps> = ({
                   <Apple className="w-5 h-5 text-slate-950" />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-black leading-tight">Download iOS App</div>
+                  <div className="text-sm font-black leading-tight">iOS App Download</div>
                   <div className="text-[10px] font-bold text-slate-600">
                     App Store / iPhone & iPad Profile
                   </div>
@@ -205,13 +205,13 @@ export const ReferralLandingPage: React.FC<ReferralLandingPageProps> = ({
               <div className="flex-1 h-px bg-slate-800" />
             </div>
 
-            {/* Button 3: Continue on Web */}
+            {/* Button 3: Continue with Web */}
             <button
               type="button"
               onClick={onContinueOnWeb}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer text-sm"
             >
-              <span>{language === 'bn' ? 'ওয়েব অ্যাপে চালিয়ে যান (Continue on Web)' : 'Continue on Web'}</span>
+              <span>{language === 'bn' ? 'ওয়েব অ্যাপে চালিয়ে যান (Continue with Web)' : 'Continue with Web'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

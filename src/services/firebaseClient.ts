@@ -1,6 +1,6 @@
 /**
  * Firebase Service and Real-Time Firestore Synchronization for Storm FF Club
- * Configured with official Firebase project: storm-ff-club
+ * Configured with provisioned Firebase project: storm-ff-club
  */
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -15,29 +15,26 @@ import {
   getAuth,
   GoogleAuthProvider
 } from 'firebase/auth';
+import firebaseConfigJson from '../../firebase-applet-config.json';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-export const firebaseConfig = {
-  apiKey: "AIzaSyA5AGXP7oNp_Dd4Sf0AxY_R5ZQ0V7QZXzQ",
-  authDomain: "storm-ff-club.firebaseapp.com",
-  projectId: "storm-ff-club",
-  storageBucket: "storm-ff-club.firebasestorage.app",
-  messagingSenderId: "752502449859",
-  appId: "1:752502449859:web:f9d8bdf8bed4778fd0a476",
-  measurementId: "G-F3D5WYKL1K"
-};
+export const firebaseConfig = firebaseConfigJson;
 
 // Initialize Firebase App
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const databaseId = firebaseConfig.firestoreDatabaseId || '(default)';
 
 let dbInstance: Firestore;
 try {
   // Force HTTP long polling to avoid WebChannel stalls in preview iframes & mobile networks
-  dbInstance = initializeFirestore(app, {
-    experimentalForceLongPolling: true
-  });
+  dbInstance = initializeFirestore(
+    app,
+    {
+      experimentalForceLongPolling: true
+    },
+    databaseId
+  );
 } catch {
-  dbInstance = getFirestore(app);
+  dbInstance = getFirestore(app, databaseId);
 }
 
 export const db = dbInstance;

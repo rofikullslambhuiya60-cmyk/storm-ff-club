@@ -433,37 +433,6 @@ export const AuthScreen: React.FC = () => {
               </>
             )}
           </form>
-
-          {/* Quick Demo Switcher info */}
-          <div className="mt-5 pt-4 border-t border-slate-800 text-center">
-            <p className="text-[11px] text-slate-400">
-              Demo account quick-login:
-            </p>
-            <div className="flex justify-center gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('player@stormff.com');
-                  setPassword('pass123');
-                  setIsLogin(true);
-                }}
-                className="text-[11px] bg-slate-800 hover:bg-slate-700 text-orange-400 px-2.5 py-1 rounded-lg border border-slate-700 cursor-pointer"
-              >
-                🎮 Pro Player Demo
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@stormff.com');
-                  setPassword('admin123');
-                  setIsLogin(true);
-                }}
-                className="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 px-2.5 py-1 rounded-lg border border-slate-700 cursor-pointer"
-              >
-                ⚡ Admin Demo
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Permanent Bangla Device Security Rules Badge */}

@@ -1,12 +1,12 @@
 {
-  "projectId": "ff-arena-444",
-  "appId": "1:482224703112:web:ee076192d7016b6ebdc13d",
-  "apiKey": "AIzaSyA89Rv25XJiC7LDPR_IPDaBbRhHLRGTqAQ",
-  "authDomain": "ff-arena-444.firebaseapp.com",
+  "projectId": "storm-ff-club",
+  "appId": "1:752502449859:web:82023b6794d522d2d0a476",
+  "apiKey": "AIzaSyA5AGXP7oNp_Dd4Sf0AxY_R5ZQ0V7QZXzQ",
+  "authDomain": "storm-ff-club.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-ffarenafreefiret-522a362b-4456-4032-b5df-8f2b211ed3d5",
-  "storageBucket": "ff-arena-444.firebasestorage.app",
-  "messagingSenderId": "482224703112",
+  "storageBucket": "storm-ff-club.firebasestorage.app",
+  "messagingSenderId": "752502449859",
   "measurementId": "",
-  "oAuthClientId": "482224703112-smlv07nsj9vj7sdl2a3omrcr1udu7u9h.apps.googleusercontent.com",
+  "oAuthClientId": "752502449859-h9eiqjhj16l6fik80bc813mtc0p1g202.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

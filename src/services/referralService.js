@@ -25,16 +25,35 @@ export const referralService = {
   },
 
   /**
-   * Parses referral code from URL query parameters (Deep linking support)
+   * Parses referral code directly from the current URL (?ref=CODE or /invite/CODE)
    */
-  detectDeepLinkReferral: () => {
+  extractUrlReferralCode: () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get('ref');
-      if (ref && ref.trim().length > 2) {
-        // Store in sessionStorage so it persists through onboarding / signup
-        sessionStorage.setItem('ffarena_pending_ref_code', ref.trim().toUpperCase());
+      if (ref && ref.trim().length > 0) {
         return ref.trim().toUpperCase();
+      }
+      const pathname = window.location.pathname || '';
+      const inviteMatch = pathname.match(/^\/invite\/([^/?#]+)/i);
+      if (inviteMatch && inviteMatch[1]) {
+        return decodeURIComponent(inviteMatch[1]).trim().toUpperCase();
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  },
+
+  /**
+   * Parses referral code from URL (?ref=CODE or /invite/CODE) and persists to sessionStorage
+   */
+  detectDeepLinkReferral: () => {
+    try {
+      const urlCode = referralService.extractUrlReferralCode();
+      if (urlCode && urlCode.length > 0) {
+        sessionStorage.setItem('ffarena_pending_ref_code', urlCode);
+        return urlCode;
       }
       return sessionStorage.getItem('ffarena_pending_ref_code') || '';
     } catch {

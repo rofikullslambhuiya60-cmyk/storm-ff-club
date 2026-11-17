@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  LayoutDashboard, Swords, Users, DollarSign, CreditCard, 
-  Gift, Bell, BookOpen, Image, ShieldCheck, LogOut, Smartphone, ArrowRight, Package, Code2 
+import {
+  LayoutDashboard, Swords, Users, DollarSign, CreditCard,
+  Gift, Bell, BookOpen, Image, ShieldCheck, LogOut, Smartphone, ArrowRight, Package, Code2
 } from 'lucide-react';
 import { AdminDashboard } from './AdminDashboard';
 import { MatchManager } from './MatchManager';
@@ -14,13 +14,24 @@ import { NotificationManager } from './NotificationManager';
 import { RulesNoticeManager } from './RulesNoticeManager';
 import { MediaControl } from './MediaControl';
 import { DeveloperSettings } from './DeveloperSettings';
+import { AdminSecuritySettings } from './AdminSecuritySettings';
 import { useApp } from '../context/AppContext';
+import { getConfiguredAdminEmail } from '../services/adminAuthService';
 
-export const AdminPanelShell: React.FC = () => {
+interface AdminPanelShellProps {
+  onExitToApp?: () => void;
+  onAdminLogout?: () => void;
+}
+
+export const AdminPanelShell: React.FC<AdminPanelShellProps> = ({
+  onExitToApp,
+  onAdminLogout
+}) => {
   const [adminTab, setAdminTab] = useState('dashboard');
-  const { setViewMode, currentUser, mysteryBoxOrders } = useApp();
+  const { setViewMode, mysteryBoxOrders } = useApp();
 
   const pendingMysteryOrders = mysteryBoxOrders.filter(o => o.status === 'pending').length;
+  const adminEmail = getConfiguredAdminEmail();
 
   const navItems = [
     { id: 'dashboard', label: 'Analytics & Overview', icon: LayoutDashboard },
@@ -33,8 +44,17 @@ export const AdminPanelShell: React.FC = () => {
     { id: 'notifications', label: 'Broadcast Push Alerts', icon: Bell },
     { id: 'rules', label: 'Contextual Rules CMS', icon: BookOpen },
     { id: 'banners', label: 'Media & Home Banners', icon: Image },
-    { id: 'developer', label: 'Hire Developer Info', icon: Code2 }
+    { id: 'developer', label: 'Hire Developer Info', icon: Code2 },
+    { id: 'security', label: 'Admin Password & Security', icon: ShieldCheck }
   ];
+
+  const handleOpenUserApp = () => {
+    if (onExitToApp) {
+      onExitToApp();
+    } else {
+      setViewMode('mobile');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#070a11] text-slate-200 flex flex-col lg:flex-row">
@@ -55,20 +75,21 @@ export const AdminPanelShell: React.FC = () => {
                 STORM FF CLUB ADMIN
               </h1>
               <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Automated Panel
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Protected Console
               </span>
             </div>
           </div>
 
-          {/* Quick toggle to mobile app view */}
+          {/* Open User App */}
           <div className="mb-4">
             <button
-              onClick={() => setViewMode('mobile')}
+              type="button"
+              onClick={handleOpenUserApp}
               className="w-full py-2 px-3 bg-gradient-to-r from-orange-500/20 to-amber-500/20 hover:from-orange-500/30 hover:to-amber-500/30 text-orange-400 border border-orange-500/40 rounded-xl text-xs font-bold flex items-center justify-between cursor-pointer transition-all"
             >
               <div className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-orange-400" />
-                <span>Switch to Mobile View</span>
+                <span>Open Player App</span>
               </div>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -83,6 +104,7 @@ export const AdminPanelShell: React.FC = () => {
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => setAdminTab(item.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
@@ -107,15 +129,30 @@ export const AdminPanelShell: React.FC = () => {
           </nav>
         </div>
 
-        {/* Admin footer info */}
-        <div className="pt-4 border-t border-slate-800/80 mt-6 px-2">
-          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
-            <span>Admin:</span>
-            <span className="text-white font-bold">{currentUser?.ign || 'Master Admin'}</span>
+        {/* Admin footer info & logout */}
+        <div className="pt-4 border-t border-slate-800/80 mt-6 px-2 space-y-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+              Signed-in Admin
+            </div>
+            <div className="text-[11px] font-mono font-bold text-white truncate mt-0.5">
+              {adminEmail}
+            </div>
+            <div className="text-[10px] text-slate-500 mt-1">
+              v2.4.0 Engine • Firestore Connected
+            </div>
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">
-            v2.4.0 Engine • Firestore Connected
-          </div>
+
+          {onAdminLogout && (
+            <button
+              type="button"
+              onClick={onAdminLogout}
+              className="w-full py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Lock & Logout Admin</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -132,6 +169,7 @@ export const AdminPanelShell: React.FC = () => {
         {adminTab === 'rules' && <RulesNoticeManager />}
         {adminTab === 'banners' && <MediaControl />}
         {adminTab === 'developer' && <DeveloperSettings />}
+        {adminTab === 'security' && <AdminSecuritySettings />}
       </main>
     </div>
   );

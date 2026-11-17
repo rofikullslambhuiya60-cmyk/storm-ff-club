@@ -152,13 +152,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch {
           savedUid = null;
         }
-        const restored =
-          (savedUid ? dbStore.findUserById(savedUid) : null) ||
-          dbStore.findUserById('user_player_demo') ||
-          dbStore.users[1] ||
-          dbStore.users[0] ||
-          null;
-        if (restored) {
+        const restored = savedUid ? dbStore.findUserById(savedUid) : null;
+        if (restored && !restored.isPermanentlyBanned) {
           setCurrentUser(restored);
         }
       }
