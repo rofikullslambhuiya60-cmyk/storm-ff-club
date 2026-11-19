@@ -12,7 +12,7 @@ import { ReferralLandingPage } from './screens/ReferralLandingPage';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { referralService } from './services/referralService';
 import {
-  isAdminSessionValid,
+  subscribeAdminAuthState,
   isConfiguredAdminEmail,
   logoutAdmin
 } from './services/adminAuthService';
@@ -37,7 +37,17 @@ function readCurrentLocation(): RouteLocation {
 const MainAppContent: React.FC = () => {
   const { currentUser, logout } = useApp();
   const [locationState, setLocationState] = useState<RouteLocation>(() => readCurrentLocation());
-  const [adminAuthenticated, setAdminAuthenticated] = useState<boolean>(() => isAdminSessionValid());
+  const [adminAuthState, setAdminAuthState] = useState<{
+    ready: boolean;
+    isAdmin: boolean;
+    userEmail: string | null;
+    hasFirebaseUser: boolean;
+  }>({
+    ready: false,
+    isAdmin: false,
+    userEmail: null,
+    hasFirebaseUser: false
+  });
 
   const navigateTo = useCallback((targetPath: string, replace = false) => {
     try {
@@ -53,11 +63,23 @@ const MainAppContent: React.FC = () => {
     }
   }, []);
 
+  // Subscribe to Firebase Authentication state for real-time Admin verification
+  useEffect(() => {
+    const unsubscribe = subscribeAdminAuthState(({ ready, isAdmin, user }) => {
+      setAdminAuthState({
+        ready,
+        isAdmin,
+        userEmail: user?.email || null,
+        hasFirebaseUser: Boolean(user)
+      });
+    });
+    return () => unsubscribe();
+  }, []);
+
   // Listen to browser back/forward history changes
   useEffect(() => {
     const handlePopState = () => {
       setLocationState(readCurrentLocation());
-      setAdminAuthenticated(isAdminSessionValid());
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -75,31 +97,46 @@ const MainAppContent: React.FC = () => {
 
   // 1. STRICTLY PROTECTED ADMIN ROUTE (/admin)
   if (pathname === '/admin') {
-    // If a non-admin regular player is logged in without an admin session, block access with 404/Unauthorized
-    const isUnauthorizedPlayer =
-      Boolean(currentUser) && !isConfiguredAdminEmail(currentUser?.email) && !adminAuthenticated;
-
-    if (isUnauthorizedPlayer) {
-      return <NotFoundScreen onGoHome={() => navigateTo('/', true)} />;
+    if (!adminAuthState.ready) {
+      return (
+        <div className="min-h-screen w-full bg-[#060911] text-slate-300 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin" />
+          <p className="text-xs font-bold tracking-wider uppercase text-slate-400">
+            Verifying Firebase Admin Session...
+          </p>
+        </div>
+      );
     }
 
-    if (!adminAuthenticated) {
+    if (adminAuthState.isAdmin) {
       return (
-        <AdminLoginScreen
-          onSuccess={() => setAdminAuthenticated(true)}
-          onGoToApp={() => navigateTo('/')}
+        <AdminPanelShell
+          onExitToApp={() => navigateTo('/')}
+          onAdminLogout={async () => {
+            await logoutAdmin();
+            await logout();
+            navigateTo('/admin', true);
+          }}
         />
       );
     }
 
+    // Block regular/non-admin authenticated players from probing the admin login route
+    const isNonAdminFirebaseUser =
+      adminAuthState.hasFirebaseUser && !isConfiguredAdminEmail(adminAuthState.userEmail);
+    const isNonAdminAppPlayer =
+      Boolean(currentUser) && !isConfiguredAdminEmail(currentUser?.email);
+
+    if (isNonAdminFirebaseUser || isNonAdminAppPlayer) {
+      return <NotFoundScreen onGoHome={() => navigateTo('/', true)} />;
+    }
+
     return (
-      <AdminPanelShell
-        onExitToApp={() => navigateTo('/')}
-        onAdminLogout={async () => {
-          await logoutAdmin();
-          setAdminAuthenticated(false);
-          navigateTo('/admin', true);
+      <AdminLoginScreen
+        onSuccess={() => {
+          // subscribeAdminAuthState updates adminAuthState.isAdmin automatically upon verified Firebase sign-in
         }}
+        onGoToApp={() => navigateTo('/')}
       />
     );
   }

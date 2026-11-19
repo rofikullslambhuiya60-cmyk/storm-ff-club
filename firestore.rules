@@ -28,17 +28,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        (
-          request.auth.token.email_verified == true &&
-          (
-            request.auth.token.email == 'rofikullslambhuiya60@gmail.com' ||
-            request.auth.token.email == 'admin@stormff.com' ||
-            request.auth.token.email == 'admin@ffarena.com'
-          )
-        )
-      );
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == 'rofikullslambhuiya60@gmail.com';
     }
 
     function isValidUser(data) {
@@ -211,10 +203,9 @@ service cloud.firestore {
       allow create, update, delete: if isValidId(resultId) && isAdmin();
     }
 
-    // Admins collection
+    // Admins collection locked: administrator identity is verified exclusively via Firebase Auth email token
     match /admins/{adminId} {
-      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
-      allow list, create, update, delete: if isAdmin();
+      allow read, write: if false;
     }
 
     // Connection test doc

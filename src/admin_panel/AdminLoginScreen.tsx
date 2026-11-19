@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Lock, Mail, KeyRound, Eye, EyeOff, ArrowLeft, AlertTriangle } from 'lucide-react';
-import { verifyAdminLogin } from '../services/adminAuthService';
+import {
+  ShieldAlert, Lock, Mail, KeyRound, Eye, EyeOff, ArrowLeft, AlertTriangle, CheckCircle2
+} from 'lucide-react';
+import {
+  signInAdminWithEmailPassword,
+  sendAdminPasswordReset
+} from '../services/adminAuthService';
 
 interface AdminLoginScreenProps {
   onSuccess: () => void;
@@ -14,22 +19,36 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
     setLoading(true);
+
     try {
-      const res = await verifyAdminLogin(email, password);
+      if (isResetMode) {
+        const res = await sendAdminPasswordReset(email);
+        if (res.success) {
+          setSuccessMsg(res.message);
+        } else {
+          setError(res.message);
+        }
+        return;
+      }
+
+      const res = await signInAdminWithEmailPassword(email, password);
       if (res.success) {
         onSuccess();
       } else {
         setError(res.message || 'Unauthorized: Invalid administrator credentials.');
       }
     } catch {
-      setError('Authentication verification failed.');
+      setError('Firebase Authentication verification failed.');
     } finally {
       setLoading(false);
     }
@@ -48,7 +67,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
             Restricted Admin Portal
           </h1>
           <p className="text-xs text-slate-400">
-            Storm FF Club Management Console • Authorized Personnel Only
+            Storm FF Club Management Console • Firebase Auth Verified Admin Only
           </p>
         </div>
 
@@ -57,6 +76,13 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
             <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/40 text-xs text-red-300 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-xs text-emerald-300 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -70,7 +96,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 <input
                   type="email"
                   autoComplete="username"
-                  placeholder="admin@domain.com"
+                  placeholder="Enter administrator email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full bg-[#080c16] border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
@@ -79,31 +105,46 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                Administrator Password
-              </label>
-              <div className="relative">
-                <KeyRound className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="••••••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-[#080c16] border border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-400 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {!isResetMode && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Administrator Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetMode(true);
+                      setError(null);
+                      setSuccessMsg(null);
+                    }}
+                    className="text-[11px] text-orange-400 hover:underline cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-[#080c16] border border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-400 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
@@ -111,8 +152,28 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
               className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer text-sm"
             >
               <Lock className="w-4 h-4" />
-              <span>{loading ? 'Verifying...' : 'Unlock Admin Panel'}</span>
+              <span>
+                {loading
+                  ? 'Verifying with Firebase Auth...'
+                  : isResetMode
+                  ? 'Send Password Reset Email'
+                  : 'Sign In to Admin Panel'}
+              </span>
             </button>
+
+            {isResetMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetMode(false);
+                  setError(null);
+                  setSuccessMsg(null);
+                }}
+                className="w-full text-center text-xs text-slate-400 hover:text-white cursor-pointer"
+              >
+                Back to Admin Sign In
+              </button>
+            )}
           </form>
 
           <div className="pt-3 border-t border-slate-800/80 text-center">
