@@ -188,12 +188,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const DEMO_PASSWORDS: Record<string, string> = {
-    'player@stormff.com': 'pass123',
-    'shadow@stormff.com': 'pass123',
-    'admin@stormff.com': 'admin123'
-  };
-
   const login = async (identifier: string, pass: string) => {
     const clean = identifier.trim().toLowerCase();
     if (!pass || !pass.trim()) {
@@ -241,26 +235,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: 'Your account has been permanently suspended for anti-cheat violation.' };
     }
 
-    // Enforce password validation for demo & local accounts when Firebase Auth did not confirm
+    // Enforce password validation via Firebase Auth or stored SHA-256 verifier (zero hardcoded passwords)
     if (!firebaseVerified) {
-      const userEmail = (user.email || '').toLowerCase();
-      const expectedDemoPass = DEMO_PASSWORDS[userEmail];
-      if (expectedDemoPass) {
-        if (pass !== expectedDemoPass) {
-          return { success: false, message: 'Incorrect email or password!' };
+      if (user.email && user.email.includes('@') && user.email.toLowerCase() !== clean) {
+        try {
+          const uidCred = await signInWithEmailAndPassword(auth, user.email.toLowerCase(), pass);
+          if (uidCred.user) {
+            firebaseVerified = true;
+          }
+        } catch (uidAuthErr: any) {
+          firebaseAuthError = uidAuthErr;
         }
-      } else {
+      }
+
+      if (!firebaseVerified) {
         const localCheck = await securityService.verifyPasswordVerifier(user.uid, user.email, pass);
-        if (localCheck === false) {
-          return { success: false, message: 'Incorrect email or password!' };
-        }
-        if (
-          localCheck === null &&
-          (firebaseAuthError?.code === 'auth/wrong-password' ||
+        if (localCheck !== true) {
+          if (
+            localCheck === false ||
+            firebaseAuthError?.code === 'auth/wrong-password' ||
             firebaseAuthError?.code === 'auth/invalid-credential' ||
-            firebaseAuthError?.code === 'auth/invalid-login-credentials')
-        ) {
-          return { success: false, message: 'Incorrect email or password!' };
+            firebaseAuthError?.code === 'auth/invalid-login-credentials'
+          ) {
+            return { success: false, message: 'Incorrect email or password!' };
+          }
+          return {
+            success: false,
+            message: 'Unable to verify credentials. Please sign in with your registered email and password or Google.'
+          };
         }
       }
     }
@@ -747,7 +749,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const userEmail = (currentUser.email || '').trim().toLowerCase();
-    const expectedDemoPass = DEMO_PASSWORDS[userEmail];
     let isPasswordValid = false;
 
     const activeFirebaseUser = auth.currentUser;
@@ -768,12 +769,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         return { success: false, message: 'Incorrect password! Withdrawal request cancelled.' };
       }
-    } else if (expectedDemoPass) {
-      // Strictly verify built-in demo account password
-      if (passwordConfirm !== expectedDemoPass) {
-        return { success: false, message: 'Incorrect password! Withdrawal request cancelled.' };
-      }
-      isPasswordValid = true;
     } else {
       // Verify against stored non-reversible SHA-256 verifier first
       const localCheck = await securityService.verifyPasswordVerifier(currentUser.uid, currentUser.email, passwordConfirm);

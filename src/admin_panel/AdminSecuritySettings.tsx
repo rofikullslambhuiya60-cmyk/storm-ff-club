@@ -27,7 +27,7 @@ export const AdminSecuritySettings: React.FC = () => {
         setFeedback({ type: 'error', message: res.message });
       }
     } catch {
-      setFeedback({ type: 'error', message: 'Failed to update admin password.' });
+      setFeedback({ type: 'error', message: 'Failed to update administrator password.' });
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,7 @@ export const AdminSecuritySettings: React.FC = () => {
               Admin Access & Password Security
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Access to this Admin Panel is strictly locked to the configured administrator account.
+              Admin access is strictly locked via Firebase Authentication (Email/Password + Email Verification) to the single authorized administrator below.
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export const AdminSecuritySettings: React.FC = () => {
             </div>
           </div>
           <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold text-emerald-400 shrink-0">
-            Active Lock
+            Firebase Verified
           </span>
         </div>
 
@@ -88,7 +88,7 @@ export const AdminSecuritySettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 font-display flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5 text-orange-400" />
-              <span>Change Admin Password</span>
+              <span>Change Firebase Admin Password</span>
             </h3>
             <button
               type="button"
@@ -108,7 +108,7 @@ export const AdminSecuritySettings: React.FC = () => {
               type={showPasswords ? 'text' : 'password'}
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
-              placeholder="Enter current admin password"
+              placeholder="Enter current administrator password"
               className="w-full bg-[#0a0e18] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
               required
             />

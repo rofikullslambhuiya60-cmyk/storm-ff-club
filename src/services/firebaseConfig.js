@@ -30,7 +30,7 @@ function cleanFirestorePayload(value) {
   return value;
 }
 
-const ADMIN_EMAILS = ['rofikullslambhuiya60@gmail.com', 'admin@stormff.com', 'admin@ffarena.com'];
+const AUTHORIZED_ADMIN_EMAIL = 'rofikullslambhuiya60@gmail.com';
 
 // Initial realistic seed data branded for Storm FF Club
 const INITIAL_SETTINGS = {
@@ -77,32 +77,6 @@ const INITIAL_SETTINGS = {
 
 const INITIAL_USERS = [
   {
-    uid: 'user_admin_01',
-    ign: '⚡ AdminBoss ⚡',
-    freeFireUid: '1092837482',
-    email: 'admin@stormff.com',
-    role: 'admin',
-    depositBalance: 500,
-    winningBalance: 1250,
-    points: 85,
-    signupBonusLocked: 0,
-    hasDeposited: true,
-    referralCode: 'BOSS99',
-    referralCount: 42,
-    referralEarnings: 680,
-    deviceId: 'DEV-ADMIN-MASTER',
-    isMatchBanned: false,
-    isPermanentlyBanned: false,
-    savedPayoutMethod: 'bKash',
-    savedPayoutNumber: '01892348190',
-    lastSpinTimestamp: '',
-    spinCycleDays: 0,
-    spinCyclePointsWon: 0,
-    spinCycleStartDate: '',
-    freeEventsJoined: [],
-    createdAt: new Date(Date.now() - 30 * 86400000).toISOString()
-  },
-  {
     uid: 'user_player_demo',
     ign: '꧁༺ 𝖄𝖔𝖚 𝕯𝖊𝖆d ༻꧂',
     freeFireUid: '2847192834',
@@ -114,7 +88,7 @@ const INITIAL_USERS = [
     signupBonusLocked: 10,
     hasDeposited: true,
     referralCode: 'DEAD77',
-    referredBy: 'BOSS99',
+    referredBy: 'SHADOW88',
     referralCount: 8,
     referralEarnings: 160,
     deviceId: 'DEV-IPHONE-7A8B',
@@ -386,7 +360,13 @@ class DatabaseStore {
           loadedSettings.signupBonus = 10;
         }
         this.settings = loadedSettings;
-        this.users = parsed.users || INITIAL_USERS;
+        const rawUsers = Array.isArray(parsed.users) ? parsed.users : INITIAL_USERS;
+        this.users = rawUsers.filter((u) => {
+          if (!u) return false;
+          const userEmail = String(u.email || '').trim().toLowerCase();
+          if (u.role === 'admin' && userEmail !== AUTHORIZED_ADMIN_EMAIL) return false;
+          return true;
+        });
         this.matches = parsed.matches || INITIAL_MATCHES;
         this.results = parsed.results || INITIAL_RESULTS;
         this.banners = parsed.banners || INITIAL_BANNERS;
@@ -509,8 +489,6 @@ class DatabaseStore {
         authUnsubs = [];
       };
 
-      const ADMIN_EMAILS = ['rofikullslambhuiya60@gmail.com', 'admin@stormff.com', 'admin@ffarena.com'];
-
       const attachPublicNotificationListener = () => {
         const publicNotifQuery = query(collection(db, 'notifications'), where('targetUid', '==', null));
         return onSnapshot(publicNotifQuery, (snapshot) => {
@@ -543,7 +521,7 @@ class DatabaseStore {
         const isAdminEmail = Boolean(
           firebaseUser.email &&
           firebaseUser.emailVerified &&
-          ADMIN_EMAILS.includes(firebaseUser.email.toLowerCase())
+          firebaseUser.email.trim().toLowerCase() === AUTHORIZED_ADMIN_EMAIL
         );
 
         // Transactions listener (scoped by uid for players, full for admins)
